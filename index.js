@@ -9,7 +9,7 @@ app.get('/', function(request, response) {
 });
 
 app.get('/bacon', function(request, response) {
-  response.send("Hello world again");
+  response.send("Hello world again with bacon");
 });
 
 
