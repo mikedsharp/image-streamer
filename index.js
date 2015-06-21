@@ -10,8 +10,15 @@ app.get('/', function(request, response) {
 
 app.get('/bacon', function(request, response) {
 
-  response.send(request.query.id); 
-  // response.send("Hello world again with bacon");
+   if(typeof request.query["hub.challenge"] !== "string"){
+      response.send("bacon"); 	
+    }
+	else{
+      response.send( request.query["hub.challenge"]); 	
+	}
+  
+
+
 });
 
 
