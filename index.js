@@ -54,7 +54,7 @@ app.get('/subscription/add', function(request, response) {
  	    	response.send('subscription added'); 
  	    }
  	    else{
- 	    	response.send('subscription failed'); 
+ 	    	response.send('subscription failed\n Status Code: ' + resp.statusCode + '\n response message: ' + resp.body.meta.error_message); 
  	    }
  	 	console.log("subscription successful");
  	 	
