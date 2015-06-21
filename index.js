@@ -41,10 +41,9 @@ app.get('/subscription/add', function(request, response) {
  	 	"client_id" : client_id, 
  	 	"client_secret": client_secret, 
  	 	"object": "tag", 
- 	 	"object_id": tag,
  	 	"aspect": "media", 
  	 	"verify_token": "media-request-from-imagestreamer", 
- 	 	"callback_url": redirect + '/subscriptions/request'
+ 	 	"callback_url": redirect + '/subscription/request'
  	 }; 
 
  	 needle.post('https://api.instagram.com/v1/subscriptions/', post_data, options, function(err, resp){
