@@ -9,6 +9,8 @@ app.get('/', function(request, response) {
 });
 
 app.get('/bacon', function(request, response) {
+
+  console.log(JSON.stringify(request)); 
   response.send("Hello world again with bacon");
 });
 
