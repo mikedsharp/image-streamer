@@ -44,7 +44,7 @@ app.get('/subscription/add', function(request, response) {
  	 	"callback_url": redirect + '/subscription/request'
  	 }; 
 
- 	 needle.post('https://api.instagram.com/v1/subscriptions?client_id=' + client_id + '&client_secret=' + client_secret + 'verify_token=' + 'blah', post_data, options, function(err, resp){
+ 	 needle.post('https://api.instagram.com/v1/subscriptions?client_id=' + client_id + '&client_secret=' + client_secret + '&verify_token=' + 'blah', post_data, options, function(err, resp){
 
 
  	    if(resp.statusCode == 200 ){
