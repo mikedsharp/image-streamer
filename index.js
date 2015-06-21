@@ -49,7 +49,15 @@ app.get('/subscription/add', function(request, response) {
 
  	 needle.post('https://api.instagram.com/v1/subscriptions/', post_data, options, function(err, resp){
 
+
+ 	    if(resp.statusCode == 200 ){
+ 	    	response.send('subscription added'); 
+ 	    }
+ 	    else{
+ 	    	response.send('subscription failed'); 
+ 	    }
  	 	console.log("subscription successful");
+ 	 	
 
  	 }); 
 
