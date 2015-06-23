@@ -23,6 +23,8 @@ if(environment == 'dev'){
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());  
 
+app.use('/', express.static('.'));
+
 var port = process.env.PORT || 5000;
 
 // API ROUTES 
@@ -106,6 +108,7 @@ router.route('/api/tag/:hashtag')
 		for(currentsub in subscribedTags){
 			if(subscribedTags[currentsub].hashtag == request.params.hashtag){
 				//response.json(subscribedTags.splice(currentsub, 1)); 
+				removeSubscription(subscribedTags[currentsub].subscription_id)
 			}
 		}
 	    response.json({message: 'no tag subscribed by that name.'}); 
@@ -214,6 +217,30 @@ router.route('/api/subscription/:id')
    response.send('');
 
 }); 
+
+function removeSubscription(subscription_id)
+{
+	  // remove subscriptions by subscription id 
+	     var id = subscription_id; 
+	     var options = []; 
+	 	 var post_data = {
+	 	 }; 
+
+	 	needle.delete('https://api.instagram.com/v1/subscriptions?&client_id=' + client_id + '&id=' + id + '&client_secret=' + client_secret, post_data, options,  
+	 	(function(scope){
+
+	 		for(currentsub in subscribedTags){
+				if(subscribedTags[currentsub].subscription_id == scope){
+					subscribedTags.splice(currentsub, 1); 
+					console.log('hashtag deleted');
+					return; 
+				}
+			}
+			console.log('no record of tag to delete');
+
+     }(subscription_id))); 
+
+}
 
 // register routes 
 app.use('/', router); 
