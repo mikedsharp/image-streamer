@@ -1,12 +1,13 @@
 {
   "name": "image-streamer",
-  "description": "",
+  "description": "Utilises the Instagram Real-time APIs for obtaining tagged images",
   "version": "0.0.1",
   "homepage": "mike-s-imagestreamer.herokuapp.com",
   "license": "",
   "private": true,
   "dependencies": {
     "angular": "1.3.x",
+    "angular-cookies": "1.3.x",
     "angular-mocks": "1.3.x",
     "jquery": "~2.1.1",
     "bootstrap": "~3.1.1",

@@ -14,7 +14,7 @@ var maxsubscriptionlife = 60000;
 var client_id = '617bb2656c9d46ccbc3a603106230bf0'; 
 var client_secret = '8e76d033812d47aa95b8e65b3b5c01c1'; 
 var redirect = 'https://mike-s-imagestreamer.herokuapp.com'; 
-var environment = 'dev';
+var environment = 'production';
 var io = require('socket.io').listen(app.listen(5000));
 
 if(environment == 'dev'){
@@ -104,6 +104,14 @@ router.route('/api/tag/:hashtag')
 	    response.json({message: 'no tag subscribed by that name.'}); 
 
 	}); 
+
+
+router.route('/api/image/:hashtag')
+	.get(function(request, response){
+		var url = 'https://api.instagram.com/v1/tags/' + request.params.hashtag + '/media/recent' + '?access_token=' +  request.query.access_token; 
+		
+	}); 
+
 
 // INSTAGRAM SUBSCRIPTION ROUTES 
 
@@ -270,10 +278,13 @@ router.route('/api/user/authorize/redirect')
       console.log("we should have the token now"); 
       var access_token = resp.body.access_token; 
       response.cookie('access_token', access_token); 
-      response.send("i am a response"); 
+      response.redirect('/?access_token='+ access_token)
 	});
 
 }); 
+
+
+
 
 
 function removeSubscription(subscription_id)
