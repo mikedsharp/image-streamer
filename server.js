@@ -2,28 +2,32 @@
 
 // packages 
 var express = require('express');
+var app = express();
+var server = require('http').Server(app);
 var bodyParser = require('body-parser'); 
 var needle = require('needle'); 
-var fs = require('fs'); 
+var path = require('path');
 
-var app = express(); 
 // globals 
 var subscribedTags = []; 
 var maxsubscriptionlife = 60000; 
 var client_id = '617bb2656c9d46ccbc3a603106230bf0'; 
 var client_secret = '8e76d033812d47aa95b8e65b3b5c01c1'; 
 var redirect = 'https://mike-s-imagestreamer.herokuapp.com'; 
-var environment = 'production';
+var environment = 'dev';
+var io = require('socket.io').listen(app.listen(5000));
 
 if(environment == 'dev'){
     redirect = 'http://146.200.38.90:5000'; 
 }
 
+
 //config 
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());  
 
-app.use('/', express.static('.'));
+app.use("", express.static(path.join(__dirname, 'public')));
+
 
 var port = process.env.PORT || 5000;
 
@@ -34,20 +38,6 @@ router.use(function(req, res, next){
 	console.log('api is being called!');
 	// let routing propagate
 	next(); 
-}); 
-
-// throw up front page for app 
-router.get('/', function  (request, response) {
-	fs.readFile('./index.html', function (err, html) {
-    if (err) {
-        throw err; 
-    }       
-    
-    response.writeHeader(200, {"Content-Type": "text/html"});  
-    response.write(html);  
-    response.end();  
- 
-});
 }); 
 
 // all api requests will be routed through here
@@ -132,7 +122,7 @@ router.route('/api/subscription/register')
 
 .post(function(request, response) {
 
-   if(typeof request.query["hub.challenge"] !== "string"){ // ignore as this isn't from instagram API
+   if(typeof request.query["hub.challenge"] !== "string"){ 
       response.send(""); 	
     }
 	else{ //if the call is successful, echo back challenge
@@ -141,10 +131,34 @@ router.route('/api/subscription/register')
   
 });
 
+
+
+router.route('/api/subscription/new')
+	.post(function(request, response) {
+
+	
+			 //console.log('incoming subscription update for tag: ' + request.body[i].object_id);
+			 io.emit('new recent image', request.body); 
+	
+
+	   response.send(''); 
+  
+}).get(function(request, response) {
+
+   if(typeof request.query["hub.challenge"] !== "string"){ // ignore as this isn't from instagram API
+      response.send(""); 	
+    }
+	else{ //if the call is successful, echo back challenge
+      response.send(request.query["hub.challenge"]); 	
+	}
+  
+})
+
+
 router.route('/api/subscription')
 	.post(function(request, response) {
 
-	   if(typeof request.body.hashtag === "string"){ // ignore as this isn't from instagram API
+	   if(typeof request.body.hashtag === "string"){ 
 	     
 	     var tag = request.body.hashtag;
 	     var options = []; 
@@ -152,7 +166,7 @@ router.route('/api/subscription')
 	 	 	"object": "tag", 
 	 	 	"object_id": tag,
 	 	 	"aspect": "media", 
-	 	 	"callback_url": redirect + '/api/subscription'
+	 	 	"callback_url": redirect + '/api/subscription/new'
 	 	 }; 
 
 	 	 needle.post('https://api.instagram.com/v1/subscriptions?client_id=' + client_id + '&client_secret=' + client_secret + '&verify_token=' + 'streamapp', post_data, options, function(err,response){
@@ -218,6 +232,50 @@ router.route('/api/subscription/:id')
 
 }); 
 
+router.route('/api/user/authorize')
+.get(function(request, response){
+
+	var authEndpoint = ''; 
+	var redirect_uri =  redirect + '/api/user/authorize/redirect'; 
+
+	authEndpoint = 'https://api.instagram.com/oauth/authorize/?client_id='
+	+ client_id 
+	+ '&redirect_uri=' 
+	+  redirect_uri
+	+ '&response_type=code'; 
+
+	response.redirect(authEndpoint); 
+
+}); 
+
+router.route('/api/user/authorize/redirect')
+.get(function(request, response){
+
+	var authEndpoint = ''; 
+    var code = request.query['code']; 
+   
+    var redirect_uri = redirect + '/api/user/authorize/redirect'; 
+
+    var post_data = {
+    	"client_id": client_id, 
+    	"client_secret": client_secret,
+    	"grant_type": "authorization_code",  
+    	"code": code, 
+    	'redirect_uri': redirect_uri
+    }; 
+
+    var options = []; 
+
+    needle.post('https://api.instagram.com/oauth/access_token', post_data,  options, function(err, resp) {
+      console.log("we should have the token now"); 
+      var access_token = resp.body.access_token; 
+      response.cookie('access_token', access_token); 
+      response.send("i am a response"); 
+	});
+
+}); 
+
+
 function removeSubscription(subscription_id)
 {
 	  // remove subscriptions by subscription id 
@@ -246,6 +304,18 @@ function removeSubscription(subscription_id)
 app.use('/', router); 
 
 // start server 
-app.listen(port); 
+io.sockets.on('connection', function (socket) {
+    console.log('client connect');
+    socket.on('echo', function (data) {
+    io.sockets.emit('message', data);
+ });
+
+    socket.on('disconnect', function(){
+    console.log('user disconnected');
+  });
+
+});
+
+
 console.log('server started on port: ' + port); 
 
