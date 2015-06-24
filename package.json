@@ -2,9 +2,9 @@
   "name": "instagram-streamer",
   "version": "0.0.1",
   "description": "backend for instagram-streamer app",
-  "main": "server.js",
+  "main": "main.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "body-parser": "^1.13.1",
