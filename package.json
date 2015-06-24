@@ -2,7 +2,7 @@
   "name": "instagram-streamer",
   "version": "0.0.1",
   "description": "backend for instagram-streamer app",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
