@@ -14,8 +14,12 @@ var maxsubscriptionlife = 60000;
 var client_id = '617bb2656c9d46ccbc3a603106230bf0'; 
 var client_secret = '8e76d033812d47aa95b8e65b3b5c01c1'; 
 var redirect = 'https://mike-s-imagestreamer.herokuapp.com'; 
-var environment = 'production';
-var io = require('socket.io').listen(app.listen(5000));
+var environment = 'dev';
+
+
+var port = process.env.PORT || 5000;
+
+var io = require('socket.io').listen(app.listen(port));
 
 if(environment == 'dev'){
     redirect = 'http://146.200.38.90:5000'; 
@@ -29,7 +33,7 @@ app.use(bodyParser.json());
 app.use("", express.static(path.join(__dirname, 'public')));
 
 
-var port = process.env.PORT || 5000;
+
 
 // API ROUTES 
 var router = express.Router(); 
