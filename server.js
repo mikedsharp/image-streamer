@@ -14,7 +14,7 @@ var maxsubscriptionlife = 60000;
 var client_id = '617bb2656c9d46ccbc3a603106230bf0'; 
 var client_secret = '8e76d033812d47aa95b8e65b3b5c01c1'; 
 var redirect = 'https://mike-s-imagestreamer.herokuapp.com'; 
-var environment = 'dev';
+var environment = 'production';
 
 
 var port = process.env.PORT || 5000;
