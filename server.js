@@ -16,7 +16,6 @@ var client_secret = '8e76d033812d47aa95b8e65b3b5c01c1';
 var redirect = 'https://mike-s-imagestreamer.herokuapp.com'; 
 var environment = 'production';
 var io = require('socket.io').listen(app.listen(5000));
-app.listen(5000); 
 
 if(environment == 'dev'){
     redirect = 'http://146.200.38.90:5000'; 
@@ -27,7 +26,7 @@ if(environment == 'dev'){
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());  
 
-app.use("/public", express.static(path.join(__dirname, 'public')));
+app.use("", express.static(path.join(__dirname, 'public')));
 
 
 var port = process.env.PORT || 5000;
@@ -161,7 +160,7 @@ router.route('/api/subscription/new')
       response.send(request.query["hub.challenge"]); 	
 	}
   
-});
+})
 
 
 router.route('/api/subscription')
@@ -208,7 +207,7 @@ router.route('/api/subscription')
       response.send(request.query["hub.challenge"]); 	
 	}
   
-});
+})
 
 
 router.route('/api/subscription/:id')
