@@ -16,16 +16,18 @@ var maxsubscriptionlife = 60000;
 var client_id =  process.env.CLIENT_ID; 
 var client_secret = process.env.CLIENT_SECRET;  
 
-var redirect = os.hostname(); 
+var redirect = ''; 
 var environment = 'production';
-
 
 var port = process.env.PORT || 5000;
 
 var io = require('socket.io').listen(app.listen(port));
 
-if(environment == 'dev'){
+if(process.env.PRODUCTION != 'true'){
     redirect = 'http://146.200.38.90:5000'; 
+}
+else{
+  redirect = 'https://mike-s-imagestreamer.herokuapp.com'; 
 }
 
 
