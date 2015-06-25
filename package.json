@@ -4,11 +4,11 @@
   "description": "backend for instagram-streamer app",
   "main": "main.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "body-parser": "^1.13.1",
-    "express": "~4.9.x",
+    "express": "~4.4.x",
     "socket.io": "^1.3.5"
   },
   "engines": {
