@@ -12,8 +12,8 @@ var os = require("os");
 // globals 
 var subscribedTags = []; 
 var maxsubscriptionlife = 60000; 
-var client_id =  process.env.CLIENT_ID; 
-var client_secret = process.env.CLIENT_SECRET;  
+var clientId =  process.env.CLIENT_ID; 
+var clientSecret = process.env.CLIENT_SECRET;  
 var redirect = process.env.HOST_URL; 
 
 var environment = 'production';
@@ -21,7 +21,6 @@ var environment = 'production';
 var port = process.env.PORT || 5000;
 
 var io = require('socket.io').listen(app.listen(port));
-
 
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());  
@@ -75,6 +74,21 @@ router.route('/api/tag')
 	response.json(subscribedTags); 
 });
 
+
+router.route('/api/tag/heartbeat')
+	.post(function(request, response){
+	 var tags = request.body; 
+
+	 for(currentsub in subscribedTags){
+		if(subscribedTags[currentsub].hashtag == tags[currentsub]){
+			subscribedTags[currentsub].maxlife = new Date().getTime() + maxsubscriptionlife; 
+		}
+	}
+
+	response.send(''); 
+
+}); 
+
 router.route('/api/tag/:hashtag')
 	.get(function(request, response){
 	for(currentsub in subscribedTags){
@@ -94,6 +108,8 @@ router.route('/api/tag/:hashtag')
 	response.json({message: 'no tag subscribed by that name.'}); 
 
 }); 
+
+
 
 router.route('/api/image/:hashtag')
 	.get(function(request, response){
@@ -136,18 +152,16 @@ router.route('/api/subscription')
 				"callback_url": redirect + '/api/subscription/new'
 			}; 
 
-			needle.post('https://api.instagram.com/v1/subscriptions?client_id=' + client_id + '&client_secret=' + client_secret + '&verify_token=' + 'streamapp', post_data, options, function(err,response){
+			needle.post('https://api.instagram.com/v1/subscriptions?client_id=' + clientId + '&client_secret=' + clientSecret + '&verify_token=' + 'streamapp', post_data, options, function(err,response){
 				if(response.statusCode == 200 ){
-					console.log("request succeeded"); 
 					subscribedTags.push({
 						hashtag: response.body.data.object_id, 
-						maxlife: new Date(new Date().getTime()+60000), 
+						maxlife: new Date().getTime() + maxsubscriptionlife, 
 						subscription_id:response.body.data.id
 					}); 
 
 				}
 				else{
-		 	    	//response.send('subscription failed\n Status Code: ' + resp.statusCode + '\n response message: ' /*+ resp.body.meta.error_message*/); 
 		 	    	console.log("request failed"); 
 		 	    }
 		 	}); 
@@ -166,6 +180,7 @@ router.route('/api/subscription')
 
 });
 
+// remove add and view subscriptions, sends requests to instagram API 
 router.route('/api/subscription/:id')
 	.delete(function(request, response) {
 		if(typeof request.params.id === "string"){ 
@@ -188,7 +203,7 @@ router.route('/api/subscription/:id')
 		var redirect_uri =  redirect + '/api/user/authorize/redirect'; 
 
 		authEndpoint = 'https://api.instagram.com/oauth/authorize/?client_id='
-		+ client_id 
+		+ clientId 
 		+ '&redirect_uri=' 
 		+  redirect_uri
 		+ '&response_type=code'; 
@@ -203,8 +218,8 @@ router.route('/api/subscription/:id')
 		var code = request.query['code']; 
 		var redirect_uri = redirect + '/api/user/authorize/redirect'; 
 		var post_data = {
-			"client_id": client_id, 
-			"client_secret": client_secret,
+			"client_id": clientId, 
+			"client_secret": clientSecret,
 			"grant_type": "authorization_code",  
 			"code": code, 
 			'redirect_uri': redirect_uri
@@ -231,7 +246,7 @@ function removeSubscription(subscription_id) {
 	  var post_data = {
 	  }; 
 
-	  needle.delete('https://api.instagram.com/v1/subscriptions?&client_id=' + client_id + '&id=' + id + '&client_secret=' + client_secret, post_data, options,  
+	  needle.delete('https://api.instagram.com/v1/subscriptions?&client_id=' + clientId + '&id=' + id + '&client_secret=' + clientSecret, post_data, options,  
 	  	(function(scope){
 
 	  		for(currentsub in subscribedTags){
@@ -241,7 +256,6 @@ function removeSubscription(subscription_id) {
 	  				return; 
 	  			}
 	  		}
-	  		console.log('no record of tag to delete');
 
 	  	}(subscription_id))); 
 
@@ -271,4 +285,5 @@ setInterval(function(){
 }, 60000); 
 
 console.log('server started on port: ' + port); 
+
 

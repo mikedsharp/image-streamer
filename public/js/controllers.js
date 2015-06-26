@@ -3,6 +3,7 @@
 angular.module( 'imageStreamerApp.controllers', []).
 controller('ImageStreamerCtrl', ['$scope','$http', '$interval', function  ($scope, $http, $interval) {
 	
+	// instantiate socket IO
 	$scope.socket = io(); 
 
 	$scope.hashtags = [
@@ -17,6 +18,7 @@ controller('ImageStreamerCtrl', ['$scope','$http', '$interval', function  ($scop
        }, activeTags); 
 
        if(activeTags.length > 0){
+       	// send tags (if we have any) every 30 seconds to ensure we still need to subscribe to them 
        	$http({
        		withCredentials: false,
        		method: 'post',
@@ -84,7 +86,7 @@ controller('ImageStreamerCtrl', ['$scope','$http', '$interval', function  ($scop
 		   	 	 					
 		   	 	 					// if we've already had this id, wait until next 
 		   	 	 					if( $scope.hashtags[j].lastid != data.data[i].id){
-		   	 	 						// limit our carousel, taking older photos off first
+		   	 	 						// limit our carousel, taking older photos off first (first-in last-out )
 			   	 	 					if($scope.hashtags[j].images.length > 3){
 			   	 	 						$scope.hashtags[j].images.pop(); 
 			   	 	 					} 
@@ -106,7 +108,7 @@ controller('ImageStreamerCtrl', ['$scope','$http', '$interval', function  ($scop
 
 	}
 
-	// socket IO events 
+	// socket IO events (event when we receive a new image update)
 	$scope.socket.on('new recent image', function(data){
 		for(var i = 0; i < data.length; i++){
 			$scope.updateStream(data[i].object_id);  
