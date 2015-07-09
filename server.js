@@ -18,6 +18,8 @@ var redirect = process.env.HOST_URL;
 
 var environment = 'production';
 
+var subscriptionInt; 
+
 var port = process.env.PORT || 5000;
 
 var io = require('socket.io').listen(app.listen(port));
@@ -239,6 +241,22 @@ router.route('/api/subscription/:id')
 // register routes 
 app.use('/', router); 
 
+
+function removeAllSubscriptions() {
+
+	 var options = []; 
+	 var post_data = {
+	 }; 
+
+	for(currentsub in subscribedTags){
+		needle.delete('https://api.instagram.com/v1/subscriptions?&client_id=' + clientId + '&object=' + 'tag' + '&client_secret=' + clientSecret, post_data, options, function(){
+			console.log('All hashtags deleted');
+			subscribedTags = []; 
+		}); 
+	}
+
+}
+
 function removeSubscription(subscription_id) {
 	  // remove subscriptions by subscription id 
 	  var id = subscription_id; 
@@ -251,8 +269,8 @@ function removeSubscription(subscription_id) {
 
 	  		for(currentsub in subscribedTags){
 	  			if(subscribedTags[currentsub].subscription_id == scope){
+	  				console.log('hashtag "' + subscribedTags[currentsub].hashtag  +'" deleted');
 	  				subscribedTags.splice(currentsub, 1); 
-	  				console.log('hashtag deleted');
 	  				return; 
 	  			}
 	  		}
@@ -263,18 +281,32 @@ function removeSubscription(subscription_id) {
 
 // start socket io server 
 io.sockets.on('connection', function (socket) {
-	console.log('client connect');
+
+
+    console.log('user connected, number connected: ' + io.engine.clientsCount);
+	if(io.engine.clientsCount == 1){
+		subscriptionInt = setInterval(subscriptionCheck, 60000);
+	}
+
 	socket.on('echo', function (data) {
 		io.sockets.emit('message', data);
 	});
+
 	socket.on('disconnect', function(){
-		console.log('user disconnected');
+
+		if(io.engine.clientsCount == 0){
+
+			removeAllSubscriptions(); 
+			clearInterval(subscriptionInt); 
+		}
+
+		console.log('user disconnected number connected: ' + io.engine.clientsCount);
 	});
 
 });
 
 // check for redundant subscriptions, remove them to avoid wasting valuable instagram hits
-setInterval(function(){
+function subscriptionCheck(){
 	for(currentsub in subscribedTags){
 		if(subscribedTags[currentsub].maxlife <= new Date().getTime()){
 			removeSubscription(subscribedTags[currentsub].subscription_id); 
@@ -282,7 +314,7 @@ setInterval(function(){
 			console.log('hashtag deleted due to inactivity');
 		}
 	}
-}, 60000); 
+}
 
 console.log('server started on port: ' + port); 
 
