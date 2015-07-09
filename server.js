@@ -8,6 +8,7 @@ var bodyParser = require('body-parser');
 var needle = require('needle'); 
 var path = require('path');
 var os = require("os");
+var subscriptionAPI = require('./subscriptionapi.js');
 
 // globals 
 var subscribedTags = []; 
@@ -79,16 +80,8 @@ router.route('/api/tag')
 
 router.route('/api/tag/heartbeat')
 	.post(function(request, response){
-	 var tags = request.body; 
-
-	 for(currentsub in subscribedTags){
-		if(subscribedTags[currentsub].hashtag == tags[currentsub]){
-			subscribedTags[currentsub].maxlife = new Date().getTime() + maxsubscriptionlife; 
-		}
-	}
-
-	response.send(''); 
-
+		subscriptionAPI.processHeartbeat(request.body.tags); 
+		response.send(''); 
 }); 
 
 router.route('/api/tag/:hashtag')
@@ -102,23 +95,21 @@ router.route('/api/tag/:hashtag')
 
 })
 	.delete(function(request, response){
+
+	var credentials = {
+				"clientId": clientId, 
+				"clientSecret": clientSecret,
+				"redirect": redirect
+			}; 
+
 	for(currentsub in subscribedTags){
 		if(subscribedTags[currentsub].hashtag == request.params.hashtag){
-			removeSubscription(subscribedTags[currentsub].subscription_id)
+			subscriptionAPI.removeSubscription(subscribedTags[currentsub].subscription_id, credentials)
 		}
 	}
 	response.json({message: 'no tag subscribed by that name.'}); 
 
 }); 
-
-
-
-router.route('/api/image/:hashtag')
-	.get(function(request, response){
-	var url = 'https://api.instagram.com/v1/tags/' + request.params.hashtag + '/media/recent' + '?access_token=' +  request.query.access_token; 
-
-}); 
-
 
 // INSTAGRAM SUBSCRIPTION ROUTES 
 
@@ -146,27 +137,14 @@ router.route('/api/subscription')
 		if(typeof request.body.hashtag === "string"){ 
 
 			var tag = request.body.hashtag;
-			var options = []; 
-			var post_data = {
-				"object": "tag", 
-				"object_id": tag,
-				"aspect": "media", 
-				"callback_url": redirect + '/api/subscription/new'
+
+			var credentials = {
+				"clientId":clientId, 
+				"clientSecret": clientSecret,
+				"redirect": redirect
 			}; 
 
-			needle.post('https://api.instagram.com/v1/subscriptions?client_id=' + clientId + '&client_secret=' + clientSecret + '&verify_token=' + 'streamapp', post_data, options, function(err,response){
-				if(response.statusCode == 200 ){
-					subscribedTags.push({
-						hashtag: response.body.data.object_id, 
-						maxlife: new Date().getTime() + maxsubscriptionlife, 
-						subscription_id:response.body.data.id
-					}); 
-
-				}
-				else{
-		 	    	console.log("request failed"); 
-		 	    }
-		 	}); 
+			subscriptionAPI.addSubscription(tag, credentials); 
 		}
 
 		response.send('');
@@ -193,7 +171,13 @@ router.route('/api/subscription/:id')
  	 	 var post_data = {
  	 	 }; 
 
- 	 	 removeSubscription(id); 
+ 	 	 var credentials = {
+				"clientId":clientId, 
+				"clientSecret": clientSecret,
+				"redirect": redirect
+			}; 
+
+ 	 	 subscriptionAPI.removeSubscription(id, credentials); 
  	 	 response.json({message : "subscription removed"});
 		}
  	}); 
@@ -241,51 +225,19 @@ router.route('/api/subscription/:id')
 // register routes 
 app.use('/', router); 
 
-
-function removeAllSubscriptions() {
-
-	 var options = []; 
-	 var post_data = {
-	 }; 
-
-	for(currentsub in subscribedTags){
-		needle.delete('https://api.instagram.com/v1/subscriptions?&client_id=' + clientId + '&object=' + 'tag' + '&client_secret=' + clientSecret, post_data, options, function(){
-			console.log('All hashtags deleted');
-			subscribedTags = []; 
-		}); 
-	}
-
-}
-
-function removeSubscription(subscription_id) {
-	  // remove subscriptions by subscription id 
-	  var id = subscription_id; 
-	  var options = []; 
-	  var post_data = {
-	  }; 
-
-	  needle.delete('https://api.instagram.com/v1/subscriptions?&client_id=' + clientId + '&id=' + id + '&client_secret=' + clientSecret, post_data, options,  
-	  	(function(scope){
-
-	  		for(currentsub in subscribedTags){
-	  			if(subscribedTags[currentsub].subscription_id == scope){
-	  				console.log('hashtag "' + subscribedTags[currentsub].hashtag  +'" deleted');
-	  				subscribedTags.splice(currentsub, 1); 
-	  				return; 
-	  			}
-	  		}
-
-	  	}(subscription_id))); 
-
-	}
-
 // start socket io server 
 io.sockets.on('connection', function (socket) {
 
 
     console.log('user connected, number connected: ' + io.engine.clientsCount);
 	if(io.engine.clientsCount == 1){
-		subscriptionInt = setInterval(subscriptionCheck, 60000);
+
+		var credentials = {
+				"clientId":clientId, 
+				"clientSecret": clientSecret,
+				"redirect": redirect
+	    }; 
+		subscriptionInt = setInterval(subscriptionAPI.subscriptionCheck, 60000, credentials);
 	}
 
 	socket.on('echo', function (data) {
@@ -296,7 +248,13 @@ io.sockets.on('connection', function (socket) {
 
 		if(io.engine.clientsCount == 0){
 
-			removeAllSubscriptions(); 
+			var credentials = {
+				"clientId": clientId, 
+				"clientSecret": clientSecret,
+				"redirect": redirect
+			}; 
+
+			subscriptionAPI.removeAllSubscriptions(credentials); 
 			clearInterval(subscriptionInt); 
 		}
 
@@ -304,17 +262,6 @@ io.sockets.on('connection', function (socket) {
 	});
 
 });
-
-// check for redundant subscriptions, remove them to avoid wasting valuable instagram hits
-function subscriptionCheck(){
-	for(currentsub in subscribedTags){
-		if(subscribedTags[currentsub].maxlife <= new Date().getTime()){
-			removeSubscription(subscribedTags[currentsub].subscription_id); 
-			subscribedTags.splice(currentsub, 1); 
-			console.log('hashtag deleted due to inactivity');
-		}
-	}
-}
 
 console.log('server started on port: ' + port); 
 
