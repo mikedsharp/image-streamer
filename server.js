@@ -80,8 +80,9 @@ router.route('/api/tag')
 
 router.route('/api/tag/heartbeat')
 	.post(function(request, response){
-		subscriptionAPI.processHeartbeat(request.body.tags); 
+		subscriptionAPI.processHeartbeat(request.body); 
 		response.send(''); 
+
 }); 
 
 router.route('/api/tag/:hashtag')
@@ -110,6 +111,15 @@ router.route('/api/tag/:hashtag')
 	response.json({message: 'no tag subscribed by that name.'}); 
 
 }); 
+
+
+
+router.route('/api/image/:hashtag')
+	.get(function(request, response){
+	var url = 'https://api.instagram.com/v1/tags/' + request.params.hashtag + '/media/recent' + '?access_token=' +  request.query.access_token; 
+
+}); 
+
 
 // INSTAGRAM SUBSCRIPTION ROUTES 
 

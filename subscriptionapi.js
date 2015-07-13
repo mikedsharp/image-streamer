@@ -70,10 +70,10 @@ var self = {
 	
 
 	},
-	processHeartbeat: function(tags){
-	 for(key in tags){
-		if(subscribedTags[tags[key]] != null && typeof subscribedTags[tags[key]] == "object"){
-			subscribedTags[tags[key]].maxlife = new Date().getTime() + maxsubscriptionlife; 
+	processHeartbeat: function(data){
+	 for(key in data.tags){
+		if(subscribedTags[data.tags[key]] != null && typeof subscribedTags[data.tags[key]] == "object"){
+			subscribedTags[data.tags[key]].maxlife = new Date().getTime() + maxsubscriptionlife; 
 		}
 	 }
 
