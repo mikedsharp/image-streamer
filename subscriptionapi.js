@@ -25,10 +25,8 @@ var self = {
 
 	  needle.delete('https://api.instagram.com/v1/subscriptions?&client_id=' + credentials.clientId + '&id=' + id + '&client_secret=' + credentials.clientSecret, post_data, options,
 	  	(function(scope){
-
 	  				console.log('hashtag "' + hashtag  +'" deleted');
 	  				subscribedTags = deleteKey(subscribedTags, [hashtag]);
-
 	  	}(hashtag)));
 	},
 	removeAllSubscriptions: function(credentials){
@@ -77,7 +75,24 @@ var self = {
 		}
 	 }
 
+ },
+ refreshTag : function (tag) {
+	 if(subscribedTags[tag] !== null && typeof subscribedTags[tag] == "object"){
+		 subscribedTags[tag].maxlife = new Date().getTime() + maxsubscriptionlife;
+	 }
+ },
+ isSubscribed : function (tag) {
+	 return typeof subscribedTags[tag] == 'object';
+},
+getSubscribedTag : function (tag) {
+	if(subscribedTags[tag] !== null && typeof subscribedTags[tag] == "object"){
+		return subscribedTags[tag];
 	}
+	return [];
+},
+getAllSubscribedTags : function () {
+	return subscribedTags;
+}
 };
 
 module.exports = self;

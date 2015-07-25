@@ -11,8 +11,6 @@ var os = require("os");
 var subscriptionAPI = require('./subscriptionapi.js');
 
 // globals
-var subscribedTags = [];
-var maxsubscriptionlife = 60000;
 var clientId =  process.env.CLIENT_ID;
 var clientSecret = process.env.CLIENT_SECRET;
 var redirect = process.env.HOST_URL;
@@ -47,34 +45,25 @@ router.route('/api/tag')
 	.post(function(request, response){
 		// obtain tagname and see if we already have it, if we do, update its expiration date, otherwise, call subscription APIs
 		var hashtag = request.body.hashtag;
-		var isSubscribed = subscribedTags.filter(function(value){
-			return value.hashtag == hashtag;
-		}).length > 0;
 
-		if(isSubscribed){
+		if(subscriptionAPI.isSubscribed(hashtag)){
 			//no need to add, just update the max life
-			for(currentsub in subscribedTags){
-				if(subscribedTags[currentsub].hashtag == 'hashtag'){
-					subscribedTags[currentsub].maxlife = new Date(new Date().getTime() + maxsubscriptionlife).getTime();
-				}
-			}
+			subscriptionAPI.refreshTag(hashtag);
 		}
 		else{
 			//call instagram API for real time subscription
-			var post_data = {
-				"hashtag" : hashtag
-			}
-			var options = [];
+			var credentials = {
+						"clientId": clientId,
+						"clientSecret": clientSecret,
+						"redirect": redirect
 
-			needle.post(redirect + '/api/subscription', post_data, options, function(err, resp){
-			});
-
+			};
+			subscriptionAPI.addSubscription(hashtag, credentials);
 		}
 		response.json({message: "response request sent !"});
-
 	})
 	.get(function(request, response){
-	response.json(subscribedTags);
+		response.json(subscriptionAPI.getAllSubscribedTags());
 });
 
 
@@ -82,18 +71,11 @@ router.route('/api/tag/heartbeat')
 	.post(function(request, response){
 		subscriptionAPI.processHeartbeat(request.body);
 		response.send('');
-
 });
 
 router.route('/api/tag/:hashtag')
 	.get(function(request, response){
-	for(currentsub in subscribedTags){
-		if(subscribedTags[currentsub].hashtag == request.params.hashtag){
-			response.json(subscribedTags[currentsub]);
-		}
-	}
-	response.json({message: 'no tag subscribed by that name.'});
-
+		response.json(subscriptionAPI.getSubscribedTag(request.params.hashtag));
 })
 	.delete(function(request, response){
 
@@ -102,14 +84,7 @@ router.route('/api/tag/:hashtag')
 				"clientSecret": clientSecret,
 				"redirect": redirect
 			};
-
-	for(currentsub in subscribedTags){
-		if(subscribedTags[currentsub].hashtag == request.params.hashtag){
-			subscriptionAPI.removeSubscription(subscribedTags[currentsub].subscription_id, credentials)
-		}
-	}
-	response.json({message: 'no tag subscribed by that name.'});
-
+			subscriptionAPI.removeSubscription(request.params.hashtag, credentials);
 });
 
 
@@ -198,11 +173,7 @@ router.route('/api/subscription/:id')
 		var authEndpoint = '';
 		var redirect_uri =  redirect + '/api/user/authorize/redirect';
 
-		authEndpoint = 'https://api.instagram.com/oauth/authorize/?client_id='
-		+ clientId
-		+ '&redirect_uri='
-		+  redirect_uri
-		+ '&response_type=code';
+		authEndpoint = 'https://api.instagram.com/oauth/authorize/?client_id=' + clientId + '&redirect_uri='	+  redirect_uri + '&response_type=code';
 
 		response.redirect(authEndpoint);
 	});
@@ -211,7 +182,7 @@ router.route('/api/subscription/:id')
 	.get(function(request, response){
 
 		var authEndpoint = '';
-		var code = request.query['code'];
+		var code = request.query.code;
 		var redirect_uri = redirect + '/api/user/authorize/redirect';
 		var post_data = {
 			"client_id": clientId,
@@ -226,7 +197,7 @@ router.route('/api/subscription/:id')
 			var access_token = resp.body.access_token;
       		// hand access token to user to allow them to request images
       		response.cookie('access_token', access_token);
-      		response.redirect('/streamer.html')
+      		response.redirect('/streamer.html');
   		});
 
 	});
@@ -256,7 +227,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('disconnect', function(){
 
-		if(io.engine.clientsCount == 0){
+		if(io.engine.clientsCount === 0){
 
 			var credentials = {
 				"clientId": clientId,
