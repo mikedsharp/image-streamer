@@ -8,13 +8,17 @@ var bodyParser = require('body-parser');
 var needle = require('needle');
 var path = require('path');
 var os = require("os");
-var subscriptionAPI = require('./subscriptionapi.js');
+
+var subscriptionAPI = require('./subscriptionapi.js')({
+			"clientId":  process.env.CLIENT_ID,
+			"clientSecret": process.env.CLIENT_SECRET,
+			"redirect": process.env.HOST_URL
+});
 
 // globals
 var clientId =  process.env.CLIENT_ID;
 var clientSecret = process.env.CLIENT_SECRET;
 var redirect = process.env.HOST_URL;
-
 var environment = 'production';
 
 var subscriptionInt;
@@ -52,13 +56,7 @@ router.route('/api/tag')
 		}
 		else{
 			//call instagram API for real time subscription
-			var credentials = {
-						"clientId": clientId,
-						"clientSecret": clientSecret,
-						"redirect": redirect
-
-			};
-			subscriptionAPI.addSubscription(hashtag, credentials);
+			subscriptionAPI.addSubscription(hashtag);
 		}
 		response.json({message: "response request sent !"});
 	})
@@ -78,13 +76,7 @@ router.route('/api/tag/:hashtag')
 		response.json(subscriptionAPI.getSubscribedTag(request.params.hashtag));
 })
 	.delete(function(request, response){
-
-	var credentials = {
-				"clientId": clientId,
-				"clientSecret": clientSecret,
-				"redirect": redirect
-			};
-			subscriptionAPI.removeSubscription(request.params.hashtag, credentials);
+			subscriptionAPI.removeSubscription(request.params.hashtag);
 });
 
 
@@ -123,13 +115,7 @@ router.route('/api/subscription')
 
 			var tag = request.body.hashtag;
 
-			var credentials = {
-				"clientId":clientId,
-				"clientSecret": clientSecret,
-				"redirect": redirect
-			};
-
-			subscriptionAPI.addSubscription(tag, credentials);
+			subscriptionAPI.addSubscription(tag);
 		}
 
 		response.send('');
@@ -156,13 +142,7 @@ router.route('/api/subscription/:id')
  	 	 var post_data = {
  	 	 };
 
- 	 	 var credentials = {
-				"clientId":clientId,
-				"clientSecret": clientSecret,
-				"redirect": redirect
-			};
-
- 	 	 subscriptionAPI.removeSubscription(id, credentials);
+ 	 	 subscriptionAPI.removeSubscription(id);
  	 	 response.json({message : "subscription removed"});
 		}
  	});
@@ -212,13 +192,7 @@ io.sockets.on('connection', function (socket) {
 
     console.log('user connected, number connected: ' + io.engine.clientsCount);
 	if(io.engine.clientsCount == 1){
-
-		var credentials = {
-				"clientId":clientId,
-				"clientSecret": clientSecret,
-				"redirect": redirect
-	    };
-		subscriptionInt = setInterval(subscriptionAPI.subscriptionCheck, 60000, credentials);
+		subscriptionInt = setInterval(subscriptionAPI.subscriptionCheck, 60000);
 	}
 
 	socket.on('echo', function (data) {
@@ -228,14 +202,7 @@ io.sockets.on('connection', function (socket) {
 	socket.on('disconnect', function(){
 
 		if(io.engine.clientsCount === 0){
-
-			var credentials = {
-				"clientId": clientId,
-				"clientSecret": clientSecret,
-				"redirect": redirect
-			};
-
-			subscriptionAPI.removeAllSubscriptions(credentials);
+			subscriptionAPI.removeAllSubscriptions();
 			clearInterval(subscriptionInt);
 		}
 
