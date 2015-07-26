@@ -5,4 +5,4 @@ angular.module('imageStreamerApp', [
   'imageStreamerApp.filters',
   'imageStreamerApp.services',
   'imageStreamerApp.directives'
-]); 
+]);

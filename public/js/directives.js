@@ -1,10 +1,8 @@
-'use strict';
-
 /* Directives */
 
 angular.module('imageStreamerApp.directives', []).
-  directive('appVersion', function (version) {
-    return function(scope, elm, attrs) {
-      elm.text(version);
-    };
-  });
+directive('appVersion', function(version) {
+  return function(scope, elm, attrs) {
+    elm.text(version);
+  };
+});

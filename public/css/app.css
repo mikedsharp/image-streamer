@@ -5,17 +5,13 @@ body {
   padding: 40px 15px;
   text-align: center;
 }
-
 .marT20 {
-	margin-top :20px;
+  margin-top: 20px;
 }
-
-.button-group .btn
-{
-  margin-right: 5px; 
+.button-group .btn {
+  margin-right: 5px;
 }
-.button-group .btn span
-{
-  margin-left: 5px; 
-  margin-top: 2px; 
+.button-group .btn span {
+  margin-left: 5px;
+  margin-top: 2px;
 }
