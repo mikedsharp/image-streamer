@@ -1,5 +1,7 @@
-'use strict';
 
 /* Services */
 
-angular.module('imageStreamerApp.services', []);
+angular.module('imageStreamerApp')
+.service('HashtagService', function(){
+  this.hashtags = [];
+});

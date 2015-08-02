@@ -186,7 +186,6 @@ router.route('/api/user/authorize/redirect')
 
   });
 
-
 // register routes
 app.use('/', router);
 

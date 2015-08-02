@@ -1,10 +1,10 @@
-angular.module('imageStreamerApp.controllers', []).
-controller('ImageStreamerCtrl', ['$scope', '$http', '$interval', function($scope, $http, $interval) {
+angular.module('imageStreamerApp', []).
+controller('ImageStreamerCtrl', ['$scope', '$http', '$interval', 'HashtagService', function($scope, $http, $interval, HashtagService) {
 
   // instantiate socket IO
   $scope.socket = io();
 
-  $scope.hashtags = [];
+  $scope.hashtags = HashtagService.hashtags;
 
   $interval(function() {
     // let server know we're still interested in the hastags we have
