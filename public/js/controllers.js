@@ -1,4 +1,4 @@
-angular.module('imageStreamerApp', []).
+angular.module('imageStreamerApp', ['ngAnimate']).
 controller('ImageStreamerCtrl', ['$scope', '$http', '$interval', 'HashtagService', function($scope, $http, $interval, HashtagService) {
 
   // instantiate socket IO
